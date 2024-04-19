@@ -2,30 +2,29 @@
 #include <stdexcept>
 #include <cassert>
 #include <vector>
+#include <cmath>
+#include <iostream>
 
-static const std::array<int, 20> skip_table
+static const std::vector<int> make_skip_table()
 {
-    1 << 26,
-    1 << 25,
-    1 << 24,
-    1 << 23,
-    1 << 22,
-    1 << 21,
-    1 << 20,
-    1 << 19,
-    1 << 18,
-    1 << 17,
-    1 << 16,
-    1 << 15,
-    1 << 14,
-    1 << 13,
-    1 << 12,
-    1 << 11,
-    1 << 10,
-    1 << 9,
-    1 << 8,
-    1 << 7 // 128
-};
+    const size_t N = 16;
+    const int max = 10e6;
+    const int min = 0xff - N;
+    std::vector<int> skip_table;
+    for (int i = 0; i < N; i++)
+    {
+        int ii = N - i - 1;
+        float base = std::exp(std::log(max/min)/N);
+        //int val = ii * float(max - min) / N + min;
+        long int val = std::pow(base, ii) * min;
+        assert(val < std::numeric_limits::<int>::max);
+        skip_table.push_back(val);
+    }
+    std::cout << std::endl;
+    return skip_table;
+}
+
+static const std::vector<int> skip_table = make_skip_table();
 
 std::span<uint8_t> encode(std::span<const uint8_t> data, std::span<uint8_t> rle_buff)
 {

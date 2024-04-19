@@ -1,5 +1,6 @@
 #include <benchmark/benchmark.h>
 #include <Eigen/Dense>
+#include <iostream>
 #include "rle.h"
 
 using Eigen::Array;
@@ -13,15 +14,13 @@ using Eigen::RowMajor;
 
 static void BM_encode(benchmark::State &state)
 {
-    Array<float, Dynamic, Dynamic> rand_x = Matrix<float, Dynamic, Dynamic>::Random(640, 480);
-    Array<uint8_t, Dynamic, Dynamic, RowMajor> x = (rand_x > 1.0).cast<uint8_t>();
-
-    x.block(500, 500, 200, 100) = 1;
-    x.block(5, 5, 2, 2) = 1;
+    Array<float, Dynamic, Dynamic> rand_x = Matrix<float, Dynamic, Dynamic>::Random(648, 480);
+    Array<uint8_t, Dynamic, Dynamic, RowMajor> x = (rand_x > 0.9).cast<uint8_t>();
 
     std::vector<uint8_t> buff(10e6);
 
+    std::span<uint8_t> rle;
     for (auto _ : state)
-        std::span<uint8_t> rle = encode(std::span(x.data(), x.size()), buff);
+        rle = encode(std::span(x.data(), x.size()), buff);
 }
 BENCHMARK(BM_encode)->Unit(benchmark::kMillisecond);

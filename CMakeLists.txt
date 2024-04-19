@@ -26,7 +26,6 @@ add_library(
     rle
     rle.cpp
 )
-
 target_link_libraries (
     rle 
     Eigen3::Eigen
@@ -36,7 +35,6 @@ add_executable(
     rle_test
     rle_test.cpp
 )
-
 target_link_libraries(
     rle_test
     rle
