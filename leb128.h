@@ -29,22 +29,26 @@ std::span<uint8_t> encode(T val, std::span<uint8_t> buff)
 
 template <typename T>
 requires std::integral<T>
-std::tuple<T, std::span<uint8_t>> decode_one(std::span<uint8_t> buff)
+std::tuple<T, std::span<const uint8_t>> decode_one(std::span<const uint8_t> buff)
 {
     T val{};
     auto it = buff.begin();
 
+    bool more_bytes{};
+    uint8_t val_shift = 0;
     do {
-        const uint8_t code = *it++;
-        const bool more_bytes = 0x80 & code;
-        val += 0x7f & code;
-        if (more_bytes) 
+        if (it >= buff.end())
         {
-            val <<= 7;
+            throw std::runtime_error("unexpectedly reached end of buffer");
         }
-    while (more_bytes)
+        const uint8_t code = *it++;
+        more_bytes = 0x80 & code;
+        val += (0x7f & code) << val_shift;
+        val_shift += 7;
+    }
+    while (more_bytes);
 
-    return {val, std::span<uint8_t>(buff.begin(), it)};
+    return {val, std::span<const uint8_t>(buff.begin(), it)};
 }
 
 }
