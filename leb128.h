@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <span>
+#include <tuple>
 
 namespace codec::leb128
 {
@@ -20,8 +21,10 @@ std::span<uint8_t> encode(T val, std::span<uint8_t> buff)
         {
             throw std::runtime_error("buffer too small");
         }
-        *(it++) = val & 0x7f;
+        uint8_t code = val & 0x7f;
         val >>= 7;
+        if (val) code |= 0x80;
+        *(it++) = code;
     } while (val);
 
     return std::span(buff.begin(), it);

@@ -43,6 +43,7 @@ target_link_libraries (
 add_executable(
     rle_test
     rle_v1_test.cpp
+    rle_v2_test.cpp
     leb128_test.cpp
 )
 target_link_libraries(

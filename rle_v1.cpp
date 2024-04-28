@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 namespace rle::v1 {
 
@@ -19,7 +20,7 @@ static const std::vector<int> make_skip_table()
         float base = std::exp(std::log(max/min)/N);
         //int val = ii * float(max - min) / N + min;
         long int val = std::pow(base, ii) * min;
-        assert(val < std::numeric_limits::<int>::max);
+        //assert(val < std::numeric_limits::<int>::max);
         skip_table.push_back(val);
     }
     std::cout << std::endl;

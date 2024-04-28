@@ -1,16 +1,17 @@
 #include "rle_v2.h"
+#include "leb128.h"
 #include <stdexcept>
 #include <cassert>
 #include <vector>
 #include <cmath>
 #include <iostream>
 
-namespace rle::v1 {
+namespace rle::v2 {
 
 std::span<uint8_t> encode(std::span<const uint8_t> data, std::span<uint8_t> rle_buff)
 {
     bool prev_val = 0;
-    int run_length = 0;
+    uint32_t run_length = 0;
     auto rle_it = rle_buff.begin();
     for (const uint8_t val : data)
     {
@@ -21,7 +22,8 @@ std::span<uint8_t> encode(std::span<const uint8_t> data, std::span<uint8_t> rle_
                 throw std::runtime_error("rle_buff buffer too small");
             }
 
-            *rle_it++ = static_cast<uint8_t>(run_length);
+            std::span<uint8_t> encoded = codec::leb128::encode(run_length, std::span(rle_it, rle_buff.end()));
+            rle_it = encoded.end();
             run_length = 0;
         } // end if
         else
@@ -33,9 +35,38 @@ std::span<uint8_t> encode(std::span<const uint8_t> data, std::span<uint8_t> rle_
     return std::span(rle_buff.begin(), rle_it);
 }
 
-std::span<uint8_t> decode(std::span<const uint8_t> rle, std::span<uint8_t> data_buff)
+std::span<uint8_t> decode(std::span<const uint8_t> rle_buff, std::span<uint8_t> data_buff)
 {
-    return {};
+    bool cur_val = 0;
+    auto data_it = data_buff.begin();
+    decltype(rle_buff)::iterator rle_it = rle_buff.begin();
+
+    while (rle_buff.end() > rle_it)
+    {
+        const auto [run_length, decoded_buff] = codec::leb128::decode_one<int>(std::span(rle_it, rle_buff.end()));
+        rle_it = decoded_buff.end();
+        for (size_t i = 0; i < run_length; i++)
+        {
+            if (data_buff.end() == data_it)
+            {
+                throw std::runtime_error("data buffer too small");
+            }
+            *data_it++ = cur_val;
+        }
+        cur_val = !cur_val;
+        if (data_buff.end() == data_it)
+        {
+            throw std::runtime_error("data buffer too small");
+        }
+        *data_it++ = cur_val;
+    } // end while
+
+    while (data_buff.end() != data_it)
+    {
+        *data_it++ = cur_val;
+    }
+
+    return std::span(data_buff.begin(), data_it);
 }
 
 }
