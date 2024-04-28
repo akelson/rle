@@ -1,9 +1,11 @@
-#include "rle.h"
+#include "rle_v1.h"
 #include <stdexcept>
 #include <cassert>
 #include <vector>
 #include <cmath>
 #include <iostream>
+
+namespace rle::v1 {
 
 static const std::vector<int> make_skip_table()
 {
@@ -106,4 +108,6 @@ std::span<uint8_t> decode(std::span<const uint8_t> rle, std::span<uint8_t> data_
     }
 
     return std::span(data_buff.begin(), data_it);
+}
+
 }

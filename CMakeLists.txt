@@ -10,6 +10,8 @@ FetchContent_Declare(googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
         GIT_TAG main)
 
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(googlebenchmark
         GIT_REPOSITORY https://github.com/google/benchmark.git
         GIT_TAG main) # need main for benchmark::benchmark
@@ -30,7 +32,8 @@ enable_testing()
 
 add_library(
     rle
-    rle.cpp
+    rle_v1.cpp
+    rle_v2.cpp
 )
 target_link_libraries (
     rle 
@@ -39,7 +42,8 @@ target_link_libraries (
 
 add_executable(
     rle_test
-    rle_test.cpp
+    rle_v1_test.cpp
+    leb128_test.cpp
 )
 target_link_libraries(
     rle_test
@@ -49,6 +53,7 @@ target_link_libraries(
 )
 
 include(GoogleTest)
+include(CTest)
 gtest_discover_tests(rle_test)
 
 add_executable(

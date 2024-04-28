@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "rle.h"
+#include "rle_v1.h"
 #include <span>
 #include <Eigen/Dense>
 
@@ -13,6 +13,8 @@ using Eigen::RowMajor;
 using ::testing::ElementsAre;
 
 #define DISP(x) std::cout << #x << ":\n" << x << std::endl;
+
+using namespace rle::v1;
 
 TEST(rle, encode)
 {
