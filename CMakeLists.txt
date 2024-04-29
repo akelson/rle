@@ -34,6 +34,7 @@ add_library(
     rle
     rle_v1.cpp
     rle_v2.cpp
+    sparse_image.cpp
 )
 target_link_libraries (
     rle 
@@ -45,6 +46,7 @@ add_executable(
     rle_v1_test.cpp
     rle_v2_test.cpp
     leb128_test.cpp
+    sparse_image_test.cpp
 )
 target_link_libraries(
     rle_test

@@ -2,6 +2,7 @@
 
 #include <span>
 #include <cstdint>
+#include <vector>
 
 namespace rle::v2 {
 
