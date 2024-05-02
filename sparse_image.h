@@ -14,61 +14,66 @@ inline std::tuple<bool, uint32_t, std::span<const uint8_t>> decode_run(std::span
 
 template <typename T>
 requires std::is_arithmetic_v<T>
-class PixelRunIterator
+class PixelIterator
 {
   public:
 
-    PixelRunIterator(T prev_value, size_t start_index, size_t img_px_remaining, std::span<const uint8_t> encoded_runs) : 
-        value_(prev_value),
-        start_index_(start_index),
-        img_px_remaining_(img_px_remaining),
+    PixelIterator(T value, size_t index, size_t num_px, std::span<const uint8_t> encoded_runs) : 
+        value_(value),
+        index_(index),
+        num_px_(num_px),
         run_length_(),
         remaining_encoded_runs_(encoded_runs)
     {
-        auto [new_value, decoded_run_length, encoded_run_length] = decode_run(remaining_encoded_runs_, value_);
-        value_ = new_value;
-        run_length_ = decoded_run_length;
-        remaining_encoded_runs_ = std::span<const uint8_t>(encoded_run_length.end(), remaining_encoded_runs_.end());
+        while (0 == run_length_ && !encoded_runs.empty())
+        {
+            auto [new_value, decoded_run_length, encoded_run_length] = decode_run(remaining_encoded_runs_, value_);
+            value_ = new_value;
+            run_length_ = decoded_run_length;
+            remaining_encoded_runs_ = std::span<const uint8_t>(encoded_run_length.end(), encoded_runs.end());
+        }
 
         // Skip runs of zero
-        while (0 == value_) ++(*this);
+        //if (0 == value_)
+        //{
+        //    index += run_length_ - 1;
+        //    run_length_ = 0;
+        //    ++(*this);
+        //}
     }
 
     // End iterator
-    PixelRunIterator() : img_px_remaining_(std::numeric_limits<size_t>::max()) {}
-  
-    PixelRunIterator& operator++()
-    {
-        ++start_index_;
-        --img_px_remaining_;
+    PixelIterator(size_t num_px) :
+        value_(),
+        index_(num_px),
+        num_px_(num_px),
+        run_length_(),
+        remaining_encoded_runs_() {}
 
-        if (1 == img_px_remaining_)
+    PixelIterator& operator++()
+    {
+        ++index_;
+        --run_length_;
+
+        if (0 == run_length_)
         {
-            // Set to end iterator
-            *this = PixelRunIterator();
-        }
-        else if (run_length_)
-        {
-            --run_length_;
-        }
-        else
-        {
-            *this = PixelRunIterator(value_, start_index_, img_px_remaining_, remaining_encoded_runs_);
+            *this = PixelIterator(value_, index_, num_px_, remaining_encoded_runs_);
         }
 
         return *this;
     }
 
-    bool operator==(const PixelRunIterator& rhs) const { return img_px_remaining_ == rhs.img_px_remaining_; }
-    bool operator!=(const PixelRunIterator& rhs) const { return !(*this == rhs); }
+    bool operator==(const PixelIterator& rhs) const { return index_ == rhs.index_; }
+    bool operator!=(const PixelIterator& rhs) const { return !(*this == rhs); }
     T& operator*() { return value_; }
+    const T& operator*() const { return value_; }
 
-    size_t index() const { return start_index_; }
+    size_t index() const { return index_; }
 
   private:
     T value_;
-    size_t start_index_;
-    size_t img_px_remaining_;
+    size_t index_;
+    size_t num_px_;
     size_t run_length_;
     std::span<const uint8_t> remaining_encoded_runs_;
 };
@@ -92,16 +97,16 @@ class SparseImage
     {
     }
 
-    SparseImage(Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic> array);
+    SparseImage(const Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &array);
 
-    PixelRunIterator<T> begin()
+    PixelIterator<T> begin()
     {
-        return PixelRunIterator(init_prev_value<bool>(), 0, size(), encoded_runs_);
+        return PixelIterator(init_prev_value<bool>(), 0, size(), encoded_runs_);
     }
 
-    PixelRunIterator<T> end()
+    PixelIterator<T> end()
     {
-        return PixelRunIterator<T>();
+        return PixelIterator<T>(size());
     }
 
     Eigen::Index width() const { return width_; }

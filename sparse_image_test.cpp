@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <Eigen/Dense>
 #include "sparse_image.h"
 
 using Eigen::Array;
@@ -25,9 +26,12 @@ TEST(SparseImage, test_1)
     EXPECT_EQ(sparse_image.height(), x.rows());
     EXPECT_EQ(sparse_image.size(), x.rows() * x.cols());
 
-    int i = 0;
+    std::array<uint8_t, 6> out;
     for(auto it = sparse_image.begin(); it != sparse_image.end(); ++it)
     {
-        DISP(it.index());
+        bool val = *it;
+        out[it.index()] = val;
     }
+    DISP(x);
+    DISP((Map<Array<uint8_t, 2, 3, RowMajor>>(out.data())));
 }

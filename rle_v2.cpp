@@ -10,7 +10,7 @@ namespace rle::v2 {
 
 std::span<uint8_t> encode(std::span<const uint8_t> data, std::span<uint8_t> rle_buff)
 {
-    bool prev_val = 0;
+    bool prev_val = false;
     uint32_t run_length = 0;
     auto rle_it = rle_buff.begin();
     for (const uint8_t val : data)
@@ -24,7 +24,7 @@ std::span<uint8_t> encode(std::span<const uint8_t> data, std::span<uint8_t> rle_
 
             std::span<uint8_t> encoded = codec::leb128::encode(run_length, std::span(rle_it, rle_buff.end()));
             rle_it = encoded.end();
-            run_length = 0;
+            run_length = 1;
         } // end if
         else
         {
@@ -32,6 +32,15 @@ std::span<uint8_t> encode(std::span<const uint8_t> data, std::span<uint8_t> rle_
         }
         prev_val = val;
     } // end for val
+
+    if (rle_buff.end() == rle_it)
+    {
+        throw std::runtime_error("rle_buff buffer too small");
+    }
+
+    std::span<uint8_t> encoded = codec::leb128::encode(run_length, std::span(rle_it, rle_buff.end()));
+    rle_it = encoded.end();
+
     return std::span(rle_buff.begin(), rle_it);
 }
 
@@ -54,11 +63,6 @@ std::span<uint8_t> decode(std::span<const uint8_t> rle_buff, std::span<uint8_t> 
             *data_it++ = cur_val;
         }
         cur_val = !cur_val;
-        if (data_buff.end() == data_it)
-        {
-            throw std::runtime_error("data buffer too small");
-        }
-        *data_it++ = cur_val;
     } // end while
 
     while (data_buff.end() != data_it)

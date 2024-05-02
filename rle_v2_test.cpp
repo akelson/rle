@@ -16,7 +16,7 @@ using ::testing::ElementsAre;
 
 using namespace rle::v2;
 
-TEST(rle_v2, encode)
+TEST(rle_v2, encode__v_u8_10)
 {
     Vector<uint8_t, Dynamic> x(10);
     x.setConstant(0);
@@ -27,7 +27,21 @@ TEST(rle_v2, encode)
     std::vector<uint8_t> buff(1024);
     std::span<uint8_t> encoded = encode(std::span(x.data(), x.size()), buff);
 
-    ASSERT_THAT(encoded, ElementsAre(0, 0, 1, 0));
+    ASSERT_THAT(encoded, ElementsAre(0, 1, 2, 1, 6));
+}
+
+TEST(rle_v2, encode__a_u8_2x3)
+{
+    Array<uint8_t, 2, 3, RowMajor> x(10);
+    x.setConstant(0);
+
+    x(0, 0) = 1;
+    x(1, 1) = 1;
+
+    std::vector<uint8_t> buff(1024);
+    std::span<uint8_t> encoded = encode(std::span(x.data(), x.size()), buff);
+
+    ASSERT_THAT(encoded, ElementsAre(0, 1, 3, 1, 1));
 }
 
 TEST(rle_v2, encode_decode)
