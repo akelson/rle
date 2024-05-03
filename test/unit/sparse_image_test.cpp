@@ -117,3 +117,34 @@ TEST(SparseImage, correlate)
 
     DISP(out);
 }
+
+TEST(SparseImage, correlate__upper_left_corner)
+{
+    ImArray<bool> x(3, 4);
+    x.setConstant(0);
+    x(0, 0) = 1;
+
+    SparseImage<bool> sparse_image(x);
+
+    ImArray<uint8_t> kernel
+    {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9},
+    };
+
+    ImArray<uint8_t> out(3, 4);
+    out.setConstant(0);
+
+    correlate<uint8_t>(sparse_image, kernel, out);
+
+    ImArray<uint8_t> out_expected
+    {
+        {5, 6, 0, 0},
+        {8, 9, 0, 0},
+        {0, 0, 0, 0}
+    };
+
+    EXPECT_TRUE((out == out_expected).all())
+        << out;
+}

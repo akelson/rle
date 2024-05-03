@@ -157,23 +157,31 @@ template <typename T=float>
 requires std::is_arithmetic_v<T>
 void correlate(const SparseImage<bool>& image, const ImArrayRef<T> &kernel, ImArrayRef<T> out)
 {
+    using Eigen::Index;
+    using Eigen::Vector;
+
     assert(kernel.cols() % 2 == 1);
     assert(kernel.rows() % 2 == 1);
 
-    using Eigen::Index;
-    using Eigen::Vector;
-    visit_sparse_image(image, [&](Eigen::Index u, Eigen::Index v, bool val) {
-        const Vector<Index, 2> uv(u, v);
-        const Vector<Index, 2> half_kernel_size(kernel.cols() / 2, kernel.rows() / 2);
-        const Vector<Index, 2> min_uv = (uv - half_kernel_size).cwiseMax(Vector<Index, 2>(0, 0));
-        const Vector<Index, 2> max_uv = (uv + half_kernel_size).cwiseMin(Vector<Index, 2>(out.cols() - 1, out.rows() - 1));
+    const Vector<Index, 2> img_size(out.cols(), out.rows());
+    const Vector<Index, 2> kernel_size(kernel.cols(), kernel.rows());
+    const Vector<Index, 2> half_kernel_size = kernel_size / 2;
 
-        for (Eigen::Index v = min_uv(1); v <= max_uv(1); ++v)
+    visit_sparse_image(image, [&](Eigen::Index u, Eigen::Index v, bool val) {
+        // UV coordinates in the input image
+        const Vector<Index, 2> uv_img(u, v);
+
+        // Min and max UV coordinates in the kernel
+        const Vector<Index, 2> min_uv_kernel = (half_kernel_size - uv_img).cwiseMax(Vector<Index, 2>::Zero());
+        const Vector<Index, 2> max_uv_kernel = (kernel_size + (img_size - uv_img)).cwiseMin(kernel_size - Vector<Index, 2>::Ones());
+
+        for (Index v_kernel = min_uv_kernel(1); v_kernel <= max_uv_kernel(1); ++v_kernel)
+        for (Index u_kernel = min_uv_kernel(0); u_kernel <= max_uv_kernel(0); ++u_kernel)
         {
-            for (Eigen::Index u = min_uv(0); u <= max_uv(0); ++u)
-            {
-                out(v, u) += val * kernel(v - min_uv(1), u - min_uv(0));
-            }
+            const Vector<Index, 2> uv_kernel(u_kernel, v_kernel);
+            const Vector<Index, 2> uv_out = uv_kernel + uv_img - half_kernel_size;
+
+            out(uv_out(1), uv_out(0)) += val * kernel(uv_kernel(1), uv_kernel(0));
         }
     });
 }
