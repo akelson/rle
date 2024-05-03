@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <Eigen/Dense>
-#include "sparse_image.h"
+#include "imgproc/sparse_image.h"
 
 using Eigen::Array;
 using Eigen::Dynamic;

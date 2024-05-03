@@ -1,5 +1,5 @@
-#include "rle_v2.h"
-#include "leb128.h"
+#include "codec/rle_v2.h"
+#include "codec/leb128.h"
 #include <stdexcept>
 #include <cassert>
 #include <vector>

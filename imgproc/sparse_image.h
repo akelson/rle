@@ -1,7 +1,7 @@
 #pragma once
 
-#include "leb128.h"
-#include "rle_v2.h"
+#include "codec/leb128.h"
+#include "codec/rle_v2.h"
 #include <Eigen/Dense>
 #include <concepts>
 #include <iterator>

@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 #include <Eigen/Dense>
 #include <iostream>
-#include "rle_v1.h"
+#include "codec/rle_v1.h"
 
 using Eigen::Array;
 using Eigen::Dynamic;

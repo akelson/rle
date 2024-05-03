@@ -1,4 +1,4 @@
-#include "sparse_image.h"
+#include "imgproc/sparse_image.h"
 #include <span>
 
 template<>

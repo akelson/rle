@@ -1,0 +1,14 @@
+add_library(
+    imgproc
+    sparse_image.cpp
+)
+target_include_directories(
+    imgproc
+    PUBLIC
+    ${CMAKE_SOURCE_DIR}
+)
+target_link_libraries(
+    imgproc
+    codec
+    Eigen3::Eigen
+)
