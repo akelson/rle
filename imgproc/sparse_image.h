@@ -16,7 +16,7 @@ using ImArrayRef = Eigen::Ref<ImArray<T>>;
 
 inline std::tuple<bool, uint32_t, std::span<const uint8_t>> decode_run(std::span<const uint8_t> buff, bool prev_value)
 {
-    auto [run_length, encoded_run_length] = codec::leb128::decode_one<uint8_t>(buff);
+    auto [run_length, encoded_run_length] = codec::leb128::decode_one<uint32_t>(buff);
     return {!prev_value, run_length, encoded_run_length};
 }
 
@@ -33,7 +33,7 @@ class PixelIterator
         run_length_(),
         remaining_encoded_runs_(encoded_runs)
     {
-        while (0 == run_length_ && !encoded_runs.empty())
+        while (0 == run_length_ && !remaining_encoded_runs_.empty())
         {
             auto [new_value, decoded_run_length, encoded_run_length] = decode_run(remaining_encoded_runs_, value_);
             value_ = new_value;

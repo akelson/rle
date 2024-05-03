@@ -13,6 +13,38 @@ using ::testing::ElementsAre;
 
 #define DISP(x) std::cout << #x << ":\n" << x << std::endl;
 
+TEST(SparseImage, ctor_all_zeros)
+{
+    ImArray<bool> x(2, 3);
+    x.setConstant(0);
+
+    SparseImage<bool> sparse_image(x);
+
+    EXPECT_EQ(sparse_image.width(), x.cols());
+    EXPECT_EQ(sparse_image.height(), x.rows());
+    EXPECT_EQ(sparse_image.size(), x.rows() * x.cols());
+};
+
+TEST(SparseImage, iterate_all_zeros)
+{
+    ImArray<bool> x(2, 3);
+    x.setConstant(0);
+
+    SparseImage<bool> sparse_image(x);
+
+    EXPECT_EQ(sparse_image.begin(), sparse_image.end());
+}
+
+TEST(SparseImage, all_zeros_large)
+{
+    ImArray<bool> x(4000, 3000);
+    x.setConstant(0);
+
+    SparseImage<bool> sparse_image(x);
+
+    EXPECT_EQ(sparse_image.begin(), sparse_image.end());
+}
+
 TEST(SparseImage, test_1)
 {
     Array<bool, Dynamic, Dynamic, RowMajor> x(2, 3);

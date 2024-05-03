@@ -10,6 +10,7 @@ FetchContent_MakeAvailable(googlebenchmark)
 add_executable(
     run_benchmark
     rle_benchmark.cpp
+    sparse_image_benchmark.cpp
 )
 target_include_directories(
     run_benchmark

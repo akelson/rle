@@ -42,6 +42,9 @@ TEST(LEB128, encode)
 
     encoded = leb128::encode(uint32_t(0xb108c3f1), buff);
     EXPECT_THAT(encoded, ElementsAre(0xf1, 0x87, 0xa3, 0x88, 0x0b));
+
+    encoded = leb128::encode(uint32_t(0xb108c3f1), buff);
+    EXPECT_THAT(encoded, ElementsAre(0xf1, 0x87, 0xa3, 0x88, 0x0b));
 }
 
 TEST(LEB128, decode_one)
@@ -65,6 +68,15 @@ TEST(LEB128, decode_one)
     EXPECT_EQ(val, 2970141681);
 }
 
+TEST(LEB128, encode_decode__3000x4000)
+{
+    std::vector<uint8_t> buff(5);
+    uint32_t val = 3000 * 4000;
+    auto encoded = leb128::encode(val, buff);
+    auto [decoded_val, encoded_val_buff] = leb128::decode_one<uint32_t>(encoded);
+    EXPECT_EQ(decoded_val, val);
+}
+
 TEST(LEB128, encode_decode)
 {
     std::random_device r;
@@ -77,7 +89,7 @@ TEST(LEB128, encode_decode)
     {
         const uint32_t val = uniform_dist(e1);
         auto encoded = leb128::encode(val, buff);
-        auto [decoded_val, encoded_val_buff] = leb128::decode_one<int>(encoded);
+        auto [decoded_val, encoded_val_buff] = leb128::decode_one<uint32_t>(encoded);
         EXPECT_EQ(decoded_val, val);
     }
 }

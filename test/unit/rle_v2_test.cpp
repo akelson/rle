@@ -16,6 +16,16 @@ using ::testing::ElementsAre;
 
 using namespace rle::v2;
 
+TEST(rle_v2, encode__all_zeros)
+{
+    std::vector<uint8_t> x(5);
+
+    std::vector<uint8_t> buff(1024);
+    std::span<uint8_t> encoded = encode(std::span(x.data(), x.size()), buff);
+
+    ASSERT_THAT(encoded, ElementsAre(5));
+}
+
 TEST(rle_v2, encode__v_u8_10)
 {
     Vector<uint8_t, Dynamic> x(10);
