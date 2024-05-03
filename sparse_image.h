@@ -6,6 +6,14 @@
 #include <concepts>
 #include <iterator>
 
+template <typename T=float>
+requires std::is_arithmetic_v<T>
+using ImArray = Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+template <typename T=float>
+requires std::is_arithmetic_v<T>
+using ImArrayRef = Eigen::Ref<ImArray<T>>;
+
 inline std::tuple<bool, uint32_t, std::span<const uint8_t>> decode_run(std::span<const uint8_t> buff, bool prev_value)
 {
     auto [run_length, encoded_run_length] = codec::leb128::decode_one<uint8_t>(buff);
@@ -65,7 +73,6 @@ class PixelIterator
 
     bool operator==(const PixelIterator& rhs) const { return index_ == rhs.index_; }
     bool operator!=(const PixelIterator& rhs) const { return !(*this == rhs); }
-    T& operator*() { return value_; }
     const T& operator*() const { return value_; }
 
     size_t index() const { return index_; }
@@ -75,6 +82,7 @@ class PixelIterator
     size_t index_;
     size_t num_px_;
     size_t run_length_;
+    size_t stride_;
     std::span<const uint8_t> remaining_encoded_runs_;
 };
 
@@ -99,12 +107,12 @@ class SparseImage
 
     SparseImage(const Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> &array);
 
-    PixelIterator<T> begin()
+    PixelIterator<T> begin() const
     {
         return PixelIterator(init_prev_value<bool>(), 0, size(), encoded_runs_);
     }
 
-    PixelIterator<T> end()
+    PixelIterator<T> end() const
     {
         return PixelIterator<T>(size());
     }
@@ -113,9 +121,33 @@ class SparseImage
     Eigen::Index height() const { return height_; }
     Eigen::Index size() const { return width_ * height_; }
 
+    Eigen::Index u(const PixelIterator<T> &it) const { return it.index() % width_; }
+    Eigen::Index v(const PixelIterator<T> &it) const { return it.index() / width_; }
+
   private:
     std::span<uint8_t> encoded_runs_;
     Eigen::Index width_;
     Eigen::Index height_;
     std::vector<uint8_t> owned_buff_;
 };
+
+template <typename T=float>
+requires std::is_arithmetic_v<T>
+void from_sparse_image(const SparseImage<bool>& image, ImArrayRef<uint8_t> &out)
+{
+    for (auto it = image.begin(); it != image.end(); ++it)
+    {
+        const auto u = image.u(it);
+        const auto v = image.v(it);
+        out(v, u) = *it;
+    }
+}
+
+template <typename T=float>
+requires std::is_arithmetic_v<T>
+void correlate(const SparseImage<bool>& image, const ImArrayRef<uint8_t> &kernel, ImArrayRef<uint8_t> &out)
+{
+    for (auto const &px : image)
+    {
+    }
+}

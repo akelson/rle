@@ -26,12 +26,12 @@ TEST(SparseImage, test_1)
     EXPECT_EQ(sparse_image.height(), x.rows());
     EXPECT_EQ(sparse_image.size(), x.rows() * x.cols());
 
-    std::array<uint8_t, 6> out;
+    std::array<bool, 6> out;
     for(auto it = sparse_image.begin(); it != sparse_image.end(); ++it)
     {
         bool val = *it;
         out[it.index()] = val;
     }
-    DISP(x);
-    DISP((Map<Array<uint8_t, 2, 3, RowMajor>>(out.data())));
+    ImArray<bool> x_out = Map<Array<bool, 2, 3, RowMajor>>(out.data());
+    EXPECT_TRUE((x_out == x).all());
 }
