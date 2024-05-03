@@ -42,12 +42,12 @@ class PixelIterator
         }
 
         // Skip runs of zero
-        //if (0 == value_)
-        //{
-        //    index += run_length_ - 1;
-        //    run_length_ = 0;
-        //    ++(*this);
-        //}
+        if (0 == value_ && 0 != run_length_)
+        {
+            index_ += run_length_ - 1;
+            run_length_ = 1;
+            ++(*this);
+        }
     }
 
     // End iterator

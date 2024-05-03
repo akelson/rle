@@ -26,14 +26,15 @@ TEST(SparseImage, test_1)
     EXPECT_EQ(sparse_image.height(), x.rows());
     EXPECT_EQ(sparse_image.size(), x.rows() * x.cols());
 
-    std::array<bool, 6> out;
+    std::array<bool, 6> out{};
     for(auto it = sparse_image.begin(); it != sparse_image.end(); ++it)
     {
         bool val = *it;
         out[it.index()] = val;
     }
     ImArray<bool> x_out = Map<Array<bool, 2, 3, RowMajor>>(out.data());
-    EXPECT_TRUE((x_out == x).all());
+    EXPECT_TRUE((x_out == x).all())
+        << x_out;
 }
 
 TEST(SparseImage, from_sparse_image)
@@ -44,6 +45,7 @@ TEST(SparseImage, from_sparse_image)
     x(1, 2) = true;
 
     ImArray<bool> x_out(3, 4);
+    x_out.setConstant(0);
 
     const SparseImage<bool> sparse_image(x);
 
