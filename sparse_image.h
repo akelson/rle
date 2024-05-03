@@ -148,14 +148,29 @@ template <typename T=float>
 requires std::is_arithmetic_v<T>
 void from_sparse_image(const SparseImage<T>& image, ImArrayRef<T> out)
 {
-    visit_sparse_image(image, [&out](Eigen::Index u, Eigen::Index v, T val) { out(v, u) = val; });
+    visit_sparse_image(image, [&out](Eigen::Index u, Eigen::Index v, T val) {
+        out(v, u) = val;
+    });
 }
 
 template <typename T=float>
 requires std::is_arithmetic_v<T>
 void correlate(const SparseImage<bool>& image, const ImArrayRef<T> &kernel, ImArrayRef<T> out)
 {
-    for (auto const &px : image)
-    {
-    }
+    using Eigen::Index;
+    using Eigen::Vector;
+    visit_sparse_image(image, [&](Eigen::Index u, Eigen::Index v, bool val) {
+        const Vector<Index, 2> uv(u, v);
+        const Vector<Index, 2> half_kernel_size(kernel.cols() / 2, kernel.rows() / 2);
+        const Vector<Index, 2> min_uv = (uv - half_kernel_size).cwiseMax(Vector<Index, 2>(0, 0));
+        const Vector<Index, 2> max_uv = (uv + half_kernel_size).cwiseMin(Vector<Index, 2>(out.cols() - 1, out.rows() - 1));
+
+        for (Eigen::Index v = min_uv(1); v <= max_uv(1); ++v)
+        {
+            for (Eigen::Index u = min_uv(0); u <= max_uv(0); ++u)
+            {
+                out(v, u) += val * kernel(v - min_uv(1), u - min_uv(0));
+            }
+        }
+    });
 }
