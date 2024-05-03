@@ -86,6 +86,7 @@ class PixelIterator
     std::span<const uint8_t> remaining_encoded_runs_;
 };
 
+
 template <typename T>
 requires std::is_arithmetic_v<T>
 bool init_prev_value(); 
@@ -184,4 +185,60 @@ void correlate(const SparseImage<bool>& image, const ImArrayRef<T> &kernel, ImAr
             out(uv_out(1), uv_out(0)) += val * kernel(uv_kernel(1), uv_kernel(0));
         }
     });
+}
+
+template <typename T, typename Op>
+requires std::is_arithmetic_v<T>
+struct CWiseOp
+{
+    void eval_to(ImArray<T> &out) const
+    {
+        using Eigen::Index;
+
+        PixelIterator it_a = a_.begin();
+        PixelIterator it_b = b_.begin();
+
+        // Iterate over the pixels in both a and b.
+        // Only advance the iterator for the image with the smallest index.
+        // After advancing an iterator, check if the indicies for both images are the same.
+        // If they are the same set an output value to the result of the operation.
+        // If they are not the same, set and output value to the result of the operation and a default value.
+        while (it_a != a_.end() && it_b != b_.end())
+        {
+            if (it_a.index() < it_b.index())
+            {
+                const Index u = a_.u(it_a);
+                const Index v = a_.v(it_a);
+                out(v, u) = Op()(*it_a, T{});
+                ++it_a;
+            }
+            else if (it_b.index() < it_a.index())
+            {
+                const Index u = b_.u(it_a);
+                const Index v = b_.v(it_a);
+                out(v, u) = Op()(T{}, *it_b);
+                ++it_b;
+            }
+            else
+            {
+                const Index u = a_.u(it_a);
+                const Index v = a_.v(it_a);
+                out(v, u) = Op()(*it_a, *it_b);
+                ++it_a;
+                ++it_b;
+            }
+        }
+    }
+
+    const SparseImage<T>& a_;
+    const SparseImage<T>& b_;
+};
+
+namespace ops
+{
+    struct And
+    {
+        template <typename T>
+        T operator()(T a, T b) const { return a && b; }
+    };
 }

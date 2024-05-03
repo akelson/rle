@@ -148,3 +148,34 @@ TEST(SparseImage, correlate__upper_left_corner)
     EXPECT_TRUE((out == out_expected).all())
         << out;
 }
+
+TEST(SparseImage, CWiseOp)
+{
+    ImArray<bool> a
+    {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0}
+
+    };
+    ImArray<bool> b
+    {
+        {1, 0, 1, 0},
+        {0, 1, 0, 0},
+        {0, 0, 0, 0}
+
+    };
+
+    SparseImage<bool> sparse_image_a(a);
+    SparseImage<bool> sparse_image_b(b);
+
+    CWiseOp<bool, ops::And> op{sparse_image_a, sparse_image_b};
+
+    ImArray<bool> out(3, 4);
+    out.setConstant(0);
+    op.eval_to(out);
+
+    DISP(a);
+    DISP(b);
+    DISP(out);
+}
