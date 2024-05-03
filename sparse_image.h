@@ -157,6 +157,9 @@ template <typename T=float>
 requires std::is_arithmetic_v<T>
 void correlate(const SparseImage<bool>& image, const ImArrayRef<T> &kernel, ImArrayRef<T> out)
 {
+    assert(kernel.cols() % 2 == 1);
+    assert(kernel.rows() % 2 == 1);
+
     using Eigen::Index;
     using Eigen::Vector;
     visit_sparse_image(image, [&](Eigen::Index u, Eigen::Index v, bool val) {
