@@ -187,42 +187,42 @@ void correlate(const SparseImage<bool>& image, const ImArrayRef<T> &kernel, ImAr
     });
 }
 
-template <typename T, typename Op>
-requires std::is_arithmetic_v<T>
+template <typename Op, typename LhsType, typename RhsType>
 struct CWiseOp
 {
+    template <typename T>
     void eval_to(ImArray<T> &out) const
     {
         using Eigen::Index;
 
-        PixelIterator it_a = a_.begin();
-        PixelIterator it_b = b_.begin();
+        PixelIterator it_a = lhs_.begin();
+        PixelIterator it_b = rhs_.begin();
 
         // Iterate over the pixels in both a and b.
         // Only advance the iterator for the image with the smallest index.
         // After advancing an iterator, check if the indicies for both images are the same.
         // If they are the same set an output value to the result of the operation.
         // If they are not the same, set and output value to the result of the operation and a default value.
-        while (it_a != a_.end() && it_b != b_.end())
+        while (it_a != lhs_.end() && it_b != rhs_.end())
         {
             if (it_a.index() < it_b.index())
             {
-                const Index u = a_.u(it_a);
-                const Index v = a_.v(it_a);
+                const Index u = lhs_.u(it_a);
+                const Index v = lhs_.v(it_a);
                 out(v, u) = Op()(*it_a, T{});
                 ++it_a;
             }
             else if (it_b.index() < it_a.index())
             {
-                const Index u = b_.u(it_a);
-                const Index v = b_.v(it_a);
+                const Index u = rhs_.u(it_a);
+                const Index v = rhs_.v(it_a);
                 out(v, u) = Op()(T{}, *it_b);
                 ++it_b;
             }
             else
             {
-                const Index u = a_.u(it_a);
-                const Index v = a_.v(it_a);
+                const Index u = lhs_.u(it_a);
+                const Index v = lhs_.v(it_a);
                 out(v, u) = Op()(*it_a, *it_b);
                 ++it_a;
                 ++it_b;
@@ -230,8 +230,8 @@ struct CWiseOp
         }
     }
 
-    const SparseImage<T>& a_;
-    const SparseImage<T>& b_;
+    const LhsType lhs_;
+    const RhsType rhs_;
 };
 
 namespace ops
