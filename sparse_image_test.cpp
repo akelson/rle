@@ -35,3 +35,19 @@ TEST(SparseImage, test_1)
     ImArray<bool> x_out = Map<Array<bool, 2, 3, RowMajor>>(out.data());
     EXPECT_TRUE((x_out == x).all());
 }
+
+TEST(SparseImage, from_sparse_image)
+{
+    ImArray<bool> x(3, 4);
+    x.setConstant(0);
+    x(0, 0) = true;
+    x(1, 2) = true;
+
+    ImArray<bool> x_out(3, 4);
+
+    const SparseImage<bool> sparse_image(x);
+
+    from_sparse_image<bool>(sparse_image, x_out);
+
+    EXPECT_TRUE((x_out == x).all());
+}

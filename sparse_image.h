@@ -131,21 +131,29 @@ class SparseImage
     std::vector<uint8_t> owned_buff_;
 };
 
-template <typename T=float>
-requires std::is_arithmetic_v<T>
-void from_sparse_image(const SparseImage<bool>& image, ImArrayRef<uint8_t> &out)
+inline void visit_sparse_image(
+    const SparseImage<bool>& image,
+    std::function<void(Eigen::Index, Eigen::Index, bool)> visitor)
 {
     for (auto it = image.begin(); it != image.end(); ++it)
     {
         const auto u = image.u(it);
         const auto v = image.v(it);
-        out(v, u) = *it;
+        const auto val = *it;
+        visitor(u, v, val);
     }
 }
 
 template <typename T=float>
 requires std::is_arithmetic_v<T>
-void correlate(const SparseImage<bool>& image, const ImArrayRef<uint8_t> &kernel, ImArrayRef<uint8_t> &out)
+void from_sparse_image(const SparseImage<T>& image, ImArrayRef<T> out)
+{
+    visit_sparse_image(image, [&out](Eigen::Index u, Eigen::Index v, T val) { out(v, u) = val; });
+}
+
+template <typename T=float>
+requires std::is_arithmetic_v<T>
+void correlate(const SparseImage<bool>& image, const ImArrayRef<T> &kernel, ImArrayRef<T> out)
 {
     for (auto const &px : image)
     {
