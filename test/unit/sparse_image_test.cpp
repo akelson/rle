@@ -200,11 +200,14 @@ TEST(SparseImage, CWiseOp)
     SparseImage<bool> sparse_image_a(a);
     SparseImage<bool> sparse_image_b(b);
 
-    CWiseOp<ops::binary::boolean::And, SparseImage<bool>&, SparseImage<bool>&> op{sparse_image_a, sparse_image_b};
+    auto operation = BinaryOp(
+        sparse_image_a,
+        sparse_image_b,
+        ops::binary::boolean::And());
 
     ImArray<bool> out(3, 4);
     out.setConstant(0);
-    eval_to(out, op);
+    eval_to(out, operation);
 
     ImArray<bool> out_expected = a && b;
 

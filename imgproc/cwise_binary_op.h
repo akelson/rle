@@ -53,19 +53,19 @@ auto eval(const BinaryOp<T_Lhs, T_Rhs, T_Op> &binary_op)
     return binary_op.op(eval(binary_op.lhs), eval(binary_op.rhs));
 }
 
-template <typename T, typename T_Rhs, typename T_Op>
-auto eval(const BinaryOp<SparseImage<T>, T_Rhs, T_Op> &binary_op)
+template <typename T_LhsPx, typename T_Rhs, typename T_Op>
+auto eval(const BinaryOp<SparseImage<T_LhsPx>, T_Rhs, T_Op> &binary_op)
 {
-    const SparseImage<T> &lhs = binary_op.lhs;
+    const SparseImage<T_LhsPx> &lhs = binary_op.lhs;
 
     assert(lhs.height() == binary_op.rhs.rows());
     assert(lhs.width() == binary_op.rhs.cols());
 
-    ImArray<T> out(lhs.height(), lhs.width());
+    ImArray<T_LhsPx> out(lhs.height(), lhs.width());
 
     // A sparse image should contain mostly zeros.
     // Initialize the output to the result of the operation if the LHS was zero.
-    out = binary_op.op(ImArray<T>::Zero(lhs.height(), lhs.width()), binary_op.rhs);
+    out = binary_op.op(ImArray<T_LhsPx>::Zero(lhs.height(), lhs.width()), binary_op.rhs);
 
     visit_sparse_image(lhs, [&](Eigen::Index u, Eigen::Index v, bool lhs_val) {
         out(v, u) = binary_op.op(lhs_val, binary_op.rhs(v, u));
@@ -74,51 +74,45 @@ auto eval(const BinaryOp<SparseImage<T>, T_Rhs, T_Op> &binary_op)
     return out;
 }
 
-template <typename Op, typename LhsType, typename RhsType>
-struct CWiseOp
-{
-    using OpType = Op;
-
-    const LhsType lhs_;
-    const RhsType rhs_;
-};
-
-template <typename T, typename CWiseOpType>
-void eval_to(ImArray<T> &out, const CWiseOpType &op)
+template <typename T, typename BinaryOpType>
+void eval_to(ImArray<T> &out, const BinaryOpType &binary_op)
 {
     using Eigen::Index;
 
-    auto it_a = op.lhs_.begin();
-    auto it_b = op.rhs_.begin();
+    const auto &lhs = binary_op.lhs;
+    const auto &rhs = binary_op.rhs;
 
-    using Op = typename CWiseOpType::OpType;
+    auto it_a = lhs.begin();
+    auto it_b = rhs.begin();
+
+    auto op = binary_op.op;
 
     // Iterate over the pixels in both a and b.
     // Only advance the iterator for the image with the smallest index.
     // After advancing an iterator, check if the indicies for both images are the same.
     // If they are the same set an output value to the result of the operation.
     // If they are not the same, set and output value to the result of the operation and a default value.
-    while (it_a != op.lhs_.end() && it_b != op.rhs_.end())
+    while (it_a != lhs.end() && it_b != rhs.end())
     {
         if (it_a.index() < it_b.index())
         {
-            const Index u = op.lhs_.u(it_a);
-            const Index v = op.lhs_.v(it_a);
-            out(v, u) = Op()(*it_a, T{});
+            const Index u = lhs.u(it_a);
+            const Index v = lhs.v(it_a);
+            out(v, u) = op(*it_a, T{});
             ++it_a;
         }
         else if (it_b.index() < it_a.index())
         {
-            const Index u = op.rhs_.u(it_a);
-            const Index v = op.rhs_.v(it_a);
-            out(v, u) = Op()(T{}, *it_b);
+            const Index u = rhs.u(it_a);
+            const Index v = rhs.v(it_a);
+            out(v, u) = op(T{}, *it_b);
             ++it_b;
         }
         else
         {
-            const Index u = op.lhs_.u(it_a);
-            const Index v = op.lhs_.v(it_a);
-            out(v, u) = Op()(*it_a, *it_b);
+            const Index u = lhs.u(it_a);
+            const Index v = lhs.v(it_a);
+            out(v, u) = op(*it_a, *it_b);
             ++it_a;
             ++it_b;
         }
