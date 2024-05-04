@@ -1,6 +1,7 @@
 #pragma once
 
 #include "imgproc/ops.h"
+#include "imgproc/sparse_image.h"
 #include <Eigen/Dense>
 
 template <typename T_Op>
@@ -46,10 +47,31 @@ T eval(ScalarOperand<T> operand)
     return operand.value;
 }
 
-template <typename T_BinaryOp>
-auto eval(const T_BinaryOp &binary_op)
+template <typename T_Lhs, typename T_Rhs, typename T_Op>
+auto eval(const BinaryOp<T_Lhs, T_Rhs, T_Op> &binary_op)
 {
     return binary_op.op(eval(binary_op.lhs), eval(binary_op.rhs));
+}
+
+template <typename T, typename T_Rhs, typename T_Op>
+auto eval(const BinaryOp<SparseImage<T>, T_Rhs, T_Op> &binary_op)
+{
+    const SparseImage<T> &lhs = binary_op.lhs;
+
+    assert(lhs.height() == binary_op.rhs.rows());
+    assert(lhs.width() == binary_op.rhs.cols());
+
+    ImArray<T> out(lhs.height(), lhs.width());
+
+    // A sparse image should contain mostly zeros.
+    // Initialize the output to the result of the operation if the LHS was zero.
+    out = binary_op.op(ImArray<T>::Zero(lhs.height(), lhs.width()), binary_op.rhs);
+
+    visit_sparse_image(lhs, [&](Eigen::Index u, Eigen::Index v, bool lhs_val) {
+        out(v, u) = binary_op.op(lhs_val, binary_op.rhs(v, u));
+    });
+
+    return out;
 }
 
 template <typename Op, typename LhsType, typename RhsType>

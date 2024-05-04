@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 #include <Eigen/Dense>
 #include "imgproc/sparse_image.h"
+#include "imgproc/cwise_binary_op.h"
 #include <memory>
 
 using Eigen::Array;

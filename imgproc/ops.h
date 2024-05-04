@@ -7,14 +7,14 @@ namespace binary::boolean
 {
     struct And
     {
-        template <typename T>
-        T operator()(T a, T b) const { return a && b; }
+        template <typename T_Lhs, typename T_Rhs>
+        auto operator()(T_Lhs lhs, T_Rhs rhs) const { return lhs && rhs; }
     };
 
     struct Or
     {
         template <typename T>
-        T operator()(T a, T b) const { return a || b; }
+        auto operator()(T a, T b) const { return a || b; }
     };
 } // binary::boolean
 

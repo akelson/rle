@@ -1,7 +1,6 @@
 #pragma once
 
 #include "imgproc/common.h"
-#include "imgproc/cwise_binary_op.h"
 #include "codec/leb128.h"
 #include "codec/rle_v2.h"
 #include <Eigen/Dense>

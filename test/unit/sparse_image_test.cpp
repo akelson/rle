@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 #include <Eigen/Dense>
 #include "imgproc/sparse_image.h"
+#include "imgproc/cwise_binary_op.h"
 #include "imgproc/ops.h"
 
 using Eigen::Array;
@@ -146,6 +147,36 @@ TEST(SparseImage, correlate__upper_left_corner)
     };
 
     EXPECT_TRUE((out == out_expected).all())
+        << out;
+}
+
+TEST(SparseImage, CWiseBinaryOp)
+{
+    ImArray<bool> a
+    {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0}
+
+    };
+    ImArray<bool> b
+    {
+        {1, 0, 1, 0},
+        {0, 1, 0, 0},
+        {0, 0, 0, 0}
+    };
+
+    SparseImage<bool> sparse_image_a(a);
+
+    auto operation = BinaryOp(
+        sparse_image_a,
+        b,
+        ops::binary::boolean::And()
+    );
+
+    ImArray<bool> out = eval(operation);
+
+    EXPECT_TRUE((out == (a && b)).all())
         << out;
 }
 
