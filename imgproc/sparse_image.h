@@ -1,18 +1,12 @@
 #pragma once
 
+#include "imgproc/common.h"
+#include "imgproc/cwise_binary_op.h"
 #include "codec/leb128.h"
 #include "codec/rle_v2.h"
 #include <Eigen/Dense>
 #include <concepts>
 #include <iterator>
-
-template <typename T=float>
-requires std::is_arithmetic_v<T>
-using ImArray = Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-
-template <typename T=float>
-requires std::is_arithmetic_v<T>
-using ImArrayRef = Eigen::Ref<ImArray<T>>;
 
 inline std::tuple<bool, uint32_t, std::span<const uint8_t>> decode_run(std::span<const uint8_t> buff, bool prev_value)
 {
@@ -185,60 +179,4 @@ void correlate(const SparseImage<bool>& image, const ImArrayRef<T> &kernel, ImAr
             out(uv_out(1), uv_out(0)) += val * kernel(uv_kernel(1), uv_kernel(0));
         }
     });
-}
-
-template <typename Op, typename LhsType, typename RhsType>
-struct CWiseOp
-{
-    template <typename T>
-    void eval_to(ImArray<T> &out) const
-    {
-        using Eigen::Index;
-
-        PixelIterator it_a = lhs_.begin();
-        PixelIterator it_b = rhs_.begin();
-
-        // Iterate over the pixels in both a and b.
-        // Only advance the iterator for the image with the smallest index.
-        // After advancing an iterator, check if the indicies for both images are the same.
-        // If they are the same set an output value to the result of the operation.
-        // If they are not the same, set and output value to the result of the operation and a default value.
-        while (it_a != lhs_.end() && it_b != rhs_.end())
-        {
-            if (it_a.index() < it_b.index())
-            {
-                const Index u = lhs_.u(it_a);
-                const Index v = lhs_.v(it_a);
-                out(v, u) = Op()(*it_a, T{});
-                ++it_a;
-            }
-            else if (it_b.index() < it_a.index())
-            {
-                const Index u = rhs_.u(it_a);
-                const Index v = rhs_.v(it_a);
-                out(v, u) = Op()(T{}, *it_b);
-                ++it_b;
-            }
-            else
-            {
-                const Index u = lhs_.u(it_a);
-                const Index v = lhs_.v(it_a);
-                out(v, u) = Op()(*it_a, *it_b);
-                ++it_a;
-                ++it_b;
-            }
-        }
-    }
-
-    const LhsType lhs_;
-    const RhsType rhs_;
-};
-
-namespace ops
-{
-    struct And
-    {
-        template <typename T>
-        T operator()(T a, T b) const { return a && b; }
-    };
 }

@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 #include <Eigen/Dense>
 #include "imgproc/sparse_image.h"
+#include "imgproc/ops.h"
 
 using Eigen::Array;
 using Eigen::Dynamic;
@@ -168,14 +169,60 @@ TEST(SparseImage, CWiseOp)
     SparseImage<bool> sparse_image_a(a);
     SparseImage<bool> sparse_image_b(b);
 
-    CWiseOp<ops::And, SparseImage<bool>&, SparseImage<bool>&> op{sparse_image_a, sparse_image_b};
+    CWiseOp<ops::binary::boolean::And, SparseImage<bool>&, SparseImage<bool>&> op{sparse_image_a, sparse_image_b};
 
     ImArray<bool> out(3, 4);
     out.setConstant(0);
-    op.eval_to(out);
+    eval_to(out, op);
 
     ImArray<bool> out_expected = a && b;
 
     EXPECT_TRUE((out == out_expected).all())
         << out;
+}
+
+TEST(BinaryOp, eval_scalar_operand)
+{
+    ScalarOperand<int> o(1);
+
+    EXPECT_EQ(eval(o), 1);
+}
+
+TEST(BinaryOp, eval_scalar_addition)
+{
+    // 1 + 2 = 3
+    ScalarOperand<int> lhs(1);
+    ScalarOperand<int> rhs(2);
+
+    BinaryOp<ScalarOperand<int>, ScalarOperand<int>, ops::binary::arithmetic::Addition> 
+        operation{lhs, rhs, ops::binary::arithmetic::Addition()};
+
+    EXPECT_EQ(eval(operation), 3);
+}
+
+TEST(BinaryOp, eval_scalar_subtraction)
+{
+    // 1 - 2 = -1
+    auto lhs = ScalarOperand(1);
+    auto rhs = ScalarOperand(2);
+
+    auto operation = BinaryOp(lhs, rhs, ops::binary::arithmetic::Subtraction());
+
+    EXPECT_EQ(eval(operation), -1);
+}
+
+TEST(BinaryOp, eval_nested_operation)
+{
+    // 1 + (2 * 3)
+    auto operation = BinaryOp(
+        ScalarOperand(1),
+        BinaryOp(
+            ScalarOperand(2),
+            ScalarOperand(3),
+            ops::binary::arithmetic::Multiplication()
+        ),
+        ops::binary::arithmetic::Addition()
+    );
+    
+    EXPECT_EQ(eval(operation), 7);
 }

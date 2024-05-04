@@ -13,6 +13,7 @@ add_executable(
     rle_v2_test.cpp
     leb128_test.cpp
     sparse_image_test.cpp
+    experiments.cpp
 )
 target_link_libraries(
     run_unit_test
