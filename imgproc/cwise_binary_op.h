@@ -23,6 +23,13 @@ struct ScalarOperand
     T value;
 };
 
+template <typename T>
+struct RefOperand
+{
+    RefOperand(const T &value) : value(value) {}
+    const T &value;
+};
+
 template <typename T_Lhs, typename T_Rhs, typename T_Op>
 struct BinaryOp
 {

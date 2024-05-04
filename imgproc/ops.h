@@ -66,4 +66,35 @@ namespace unary::arithmetic
     };
 } // unary::arithmetic
 
+namespace iterated_binary
+{
+    template <typename Op>
+    struct generic_iterated_binary_op
+    {
+        Op op;
+
+        template <typename T>
+        auto operator()(const T& values) const
+        {
+            auto it = values.begin();
+
+            using result_type = typename std::iterator_traits<decltype(it)>::value_type;
+
+            if (it == values.end()) return result_type{};
+
+            result_type result = *it;
+
+            for (++it; it != values.end(); ++it)
+            {
+                result = op(result, *it);
+            }
+
+            return result;
+        }
+    };
+    
+    using Summation = generic_iterated_binary_op<binary::arithmetic::Addition>;
+    using Product = generic_iterated_binary_op<binary::arithmetic::Multiplication>;
+}
+
 } // ops
