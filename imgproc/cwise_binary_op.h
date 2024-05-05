@@ -1,5 +1,6 @@
 #pragma once
 
+#include "imgproc/map_storage.h"
 #include "imgproc/ops.h"
 #include "imgproc/sparse_image.h"
 #include <Eigen/Dense>
@@ -79,12 +80,11 @@ struct BinaryOp : public BinaryOpBase<T_Lhs, T_Rhs, T_Op>
 };
 
 template <typename T_Op, typename Allocator>
-auto eval_to_imarray(const T_Op &op, Allocator &alloc)
+auto allocate_result_and_eval(const T_Op &op, Allocator &alloc)
 {
-    // TODO: Use custom allocator
-    ImArray<typename T_Op::value_type> out(op.lhs.rows(), op.rhs.cols());
-    op.eval_to(out, alloc);
-    return out;
+    MapStorage<ImArray<typename T_Op::value_type>> storage(op.lhs.rows(), op.rhs.cols(), alloc);
+    op.eval_to(storage.map, alloc);
+    return storage;
 }
 
 template <typename T_LhsPx, typename T_RhsPx, typename T_Op>
@@ -141,7 +141,7 @@ struct BinaryOp<SparseImage<T_LhsPx>, SparseImage<T_RhsPx>, T_Op> :
     template <typename Allocator>
     auto eval(Allocator &alloc) const
     { 
-        return eval_to_imarray(*this, alloc);
+        return allocate_result_and_eval(*this, alloc);
     }
 };
 
@@ -179,7 +179,7 @@ struct BinaryOp<SparseImage<T_LhsPx>, T_Rhs, T_Op> :
     template <typename Allocator>
     auto eval(Allocator &alloc) const
     { 
-        return eval_to_imarray(*this, alloc);
+        return allocate_result_and_eval(*this, alloc);
     }
 };
 
@@ -217,7 +217,7 @@ struct BinaryOp<T_Lhs, SparseImage<T_RhsPx>, T_Op> :
     template <typename Allocator>
     auto eval(Allocator &alloc) const
     { 
-        return eval_to_imarray(*this, alloc);
+        return allocate_result_and_eval(*this, alloc);
     }
 };
     

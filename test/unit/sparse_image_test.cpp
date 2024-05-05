@@ -175,7 +175,7 @@ TEST(SparseImage, CWiseBinaryOp)
     };
 
     std::allocator<bool> alloc;
-    ImArray<bool> out = operation.eval(alloc);
+    ImArray<bool> out = operation.eval(alloc).map;
 
     EXPECT_TRUE((out == (a && b)).all())
         << out;
