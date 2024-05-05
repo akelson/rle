@@ -54,14 +54,14 @@ auto eval(const BinaryOp<T_Lhs, T_Rhs, T_Op> &binary_op)
 }
 
 template <typename T_LhsPx, typename T_Rhs, typename T_Op>
-auto eval(const BinaryOp<SparseImage<T_LhsPx>, T_Rhs, T_Op> &binary_op)
+auto eval_to(ImArray<T_LhsPx> &out, const BinaryOp<SparseImage<T_LhsPx>, T_Rhs, T_Op> &binary_op)
 {
     const SparseImage<T_LhsPx> &lhs = binary_op.lhs;
 
     assert(lhs.height() == binary_op.rhs.rows());
     assert(lhs.width() == binary_op.rhs.cols());
 
-    ImArray<T_LhsPx> out(lhs.height(), lhs.width());
+    out.resize(lhs.height(), lhs.width());
 
     // A sparse image should contain mostly zeros.
     // Initialize the output to the result of the operation if the LHS was zero.
@@ -70,51 +70,52 @@ auto eval(const BinaryOp<SparseImage<T_LhsPx>, T_Rhs, T_Op> &binary_op)
     visit_sparse_image(lhs, [&](Eigen::Index u, Eigen::Index v, bool lhs_val) {
         out(v, u) = binary_op.op(lhs_val, binary_op.rhs(v, u));
     });
+}
 
+template <typename T_LhsPx, typename T_Rhs, typename T_Op>
+auto eval(const BinaryOp<SparseImage<T_LhsPx>, T_Rhs, T_Op> &binary_op)
+{
+    ImArray<T_LhsPx> out;
+    eval_to(out, binary_op);
     return out;
 }
 
-template <typename T, typename BinaryOpType>
-void eval_to(ImArray<T> &out, const BinaryOpType &binary_op)
+template <typename T_LhsPx, typename T_RhsPx, typename T_Op>
+auto eval_to(ImArray<T_LhsPx> &out, const BinaryOp<SparseImage<T_LhsPx>, SparseImage<T_RhsPx>, T_Op> &binary_op)
 {
     using Eigen::Index;
 
     const auto &lhs = binary_op.lhs;
     const auto &rhs = binary_op.rhs;
-
-    auto it_a = lhs.begin();
-    auto it_b = rhs.begin();
-
     auto op = binary_op.op;
+    const auto default_value = T_LhsPx{};
 
-    // Iterate over the pixels in both a and b.
-    // Only advance the iterator for the image with the smallest index.
-    // After advancing an iterator, check if the indicies for both images are the same.
-    // If they are the same set an output value to the result of the operation.
-    // If they are not the same, set and output value to the result of the operation and a default value.
-    while (it_a != lhs.end() && it_b != rhs.end())
+    auto it_lhs = lhs.begin();
+    auto it_rhs = rhs.begin();
+
+    while (it_lhs != lhs.end() && it_rhs != rhs.end())
     {
-        if (it_a.index() < it_b.index())
+        if (it_lhs.index() < it_rhs.index())
         {
-            const Index u = lhs.u(it_a);
-            const Index v = lhs.v(it_a);
-            out(v, u) = op(*it_a, T{});
-            ++it_a;
+            const Index u = lhs.u(it_lhs);
+            const Index v = lhs.v(it_lhs);
+            out(v, u) = op(*it_lhs, default_value);
+            ++it_lhs;
         }
-        else if (it_b.index() < it_a.index())
+        else if (it_rhs.index() < it_lhs.index())
         {
-            const Index u = rhs.u(it_a);
-            const Index v = rhs.v(it_a);
-            out(v, u) = op(T{}, *it_b);
-            ++it_b;
+            const Index u = rhs.u(it_rhs);
+            const Index v = rhs.v(it_rhs);
+            out(v, u) = op(default_value, *it_rhs);
+            ++it_rhs;
         }
         else
         {
-            const Index u = lhs.u(it_a);
-            const Index v = lhs.v(it_a);
-            out(v, u) = op(*it_a, *it_b);
-            ++it_a;
-            ++it_b;
+            const Index u = lhs.u(it_lhs);
+            const Index v = lhs.v(it_lhs);
+            out(v, u) = op(*it_lhs, *it_rhs);
+            ++it_lhs;
+            ++it_rhs;
         }
     }
 }
