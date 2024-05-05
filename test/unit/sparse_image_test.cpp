@@ -200,17 +200,37 @@ TEST(SparseImage, CWiseOp)
     SparseImage<bool> sparse_image_a(a);
     SparseImage<bool> sparse_image_b(b);
 
-    auto operation = BinaryOp(
+    auto operation_both_sparse = BinaryOp(
         sparse_image_a,
         sparse_image_b,
         ops::binary::boolean::And());
 
-    ImArray<bool> out(3, 4);
-    out.setConstant(0);
-    eval_to(out, operation);
+    ImArray<bool> out_both_sparse(3, 4);
+    out_both_sparse.setConstant(0);
+    eval_to(out_both_sparse, operation_both_sparse);
+
+    auto operation_lhs_sparse = BinaryOp(
+        sparse_image_a,
+        b,
+        ops::binary::boolean::And());
+    ImArray<bool> out_lhs_sparse(3, 4);
+    out_lhs_sparse.setConstant(0);
+    eval_to(out_lhs_sparse, operation_lhs_sparse);
+
+    auto operation_rhs_sparse = BinaryOp(
+        a,
+        sparse_image_b,
+        ops::binary::boolean::And());
+    ImArray<bool> out_rhs_sparse(3, 4);
+    out_rhs_sparse.setConstant(0);
+    eval_to(out_rhs_sparse, operation_rhs_sparse);
 
     ImArray<bool> out_expected = a && b;
 
-    EXPECT_TRUE((out == out_expected).all())
-        << out;
+    EXPECT_TRUE((out_both_sparse == out_expected).all())
+        << out_both_sparse;
+    EXPECT_TRUE((out_lhs_sparse == out_expected).all())
+        << out_lhs_sparse;
+    EXPECT_TRUE((out_rhs_sparse == out_expected).all()) 
+        << out_rhs_sparse; 
 }

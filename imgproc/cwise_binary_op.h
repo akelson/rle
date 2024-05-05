@@ -73,6 +73,26 @@ auto eval_to(Eigen::ArrayBase<DerivedOut> &out, const BinaryOp<SparseImage<T_Lhs
     });
 }
 
+template <typename DerivedOut, typename T_Lhs, typename T_RhsPx, typename T_Op>
+auto eval_to(Eigen::ArrayBase<DerivedOut> &out, const BinaryOp<T_Lhs, SparseImage<T_RhsPx>, T_Op> &binary_op)
+{
+    const auto &lhs = binary_op.lhs;
+    const SparseImage<T_RhsPx> &rhs = binary_op.rhs;
+
+    assert(lhs.rows() == rhs.height());
+    assert(lhs.cols() == rhs.width());
+    assert(out.rows() == rhs.height());
+    assert(out.cols() == rhs.width());
+
+    // A sparse image should contain mostly zeros.
+    // Initialize the output to the result of the operation if the RHS was zero.
+    out = binary_op.op(lhs, ImArray<T_RhsPx>::Zero(rhs.height(), rhs.width()));
+
+    visit_sparse_image(rhs, [&](Eigen::Index u, Eigen::Index v, bool rhs_val) {
+        out(v, u) = binary_op.op(lhs(v, u), rhs_val);
+    });
+}
+
 template <typename T_LhsPx, typename T_Rhs, typename T_Op>
 auto eval(const BinaryOp<SparseImage<T_LhsPx>, T_Rhs, T_Op> &binary_op)
 {
