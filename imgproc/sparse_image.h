@@ -92,6 +92,8 @@ requires std::is_arithmetic_v<T>
 class SparseImage
 {
   public:
+    using value_type = T;
+
     SparseImage(Eigen::Index width, Eigen::Index height, std::span<uint8_t> encoded_runs) :
         width_(width),
         height_(height),

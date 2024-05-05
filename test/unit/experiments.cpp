@@ -37,7 +37,7 @@ TEST(BinaryOp, eval_scalar_operand)
 {
     ScalarOperand<int> o(1);
 
-    EXPECT_EQ(eval(o), 1);
+    EXPECT_EQ(o.eval(), 1);
 }
 
 TEST(BinaryOp, eval_scalar_addition)
@@ -49,7 +49,7 @@ TEST(BinaryOp, eval_scalar_addition)
     BinaryOp<ScalarOperand<int>, ScalarOperand<int>, ops::binary::arithmetic::Addition> 
         operation{lhs, rhs, ops::binary::arithmetic::Addition()};
 
-    EXPECT_EQ(eval(operation), 3);
+    EXPECT_EQ(operation.eval(), 3);
 }
 
 TEST(BinaryOp, eval_scalar_subtraction)
@@ -60,7 +60,7 @@ TEST(BinaryOp, eval_scalar_subtraction)
 
     auto operation = BinaryOp(lhs, rhs, ops::binary::arithmetic::Subtraction());
 
-    EXPECT_EQ(eval(operation), -1);
+    EXPECT_EQ(operation.eval(), -1);
 }
 
 TEST(BinaryOp, eval_nested_operation)
@@ -76,7 +76,7 @@ TEST(BinaryOp, eval_nested_operation)
         ops::binary::arithmetic::Addition()
     );
     
-    EXPECT_EQ(eval(operation), 7);
+    EXPECT_EQ(operation.eval(), 7);
 }
 
 TEST(IteratedBinaryOp, Summation)
