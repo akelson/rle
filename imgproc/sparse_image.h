@@ -115,6 +115,9 @@ class SparseImage
     Eigen::Index height() const { return height_; }
     Eigen::Index size() const { return width_ * height_; }
 
+    Eigen::Index rows() const { return height_; }
+    Eigen::Index cols() const { return width_; }
+
     Eigen::Index u(const PixelIterator<T> &it) const { return it.index() % width_; }
     Eigen::Index v(const PixelIterator<T> &it) const { return it.index() / width_; }
 
